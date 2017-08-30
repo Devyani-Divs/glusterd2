@@ -3,6 +3,11 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/gluster/glusterd2/pkg/api"
+
+
 )
 
 const (
@@ -77,7 +82,27 @@ var volumeCreateCmd = &cobra.Command{
 		validateNArgs(cmd, 2, 0)
 		volname := cmd.Flags().Args()[0]
 		bricks := cmd.Flags().Args()[1:]
-		fmt.Println("CREATE:", volname, bricks)
+		vol, err := client.VolumeCreate(api.VolCreateReq{
+			Name: volname,
+			Bricks: bricks,
+			Replica: flagCreateCmdReplicaCount,
+			Force: flagCreateCmdForce,
+		})
+		if err != nil {
+			log.WithField("volume", volname).Println("volume creation failed")
+			failure(fmt.Sprintf("Volume creation failed with %s", err.Error()), 1)
+		}
+		fmt.Println("Volume created successfully\n")
+		fmt.Println("Volume Name: ", vol.Name)
+		fmt.Println("Type: ", vol.Type)
+		fmt.Println("Volume ID: ", vol.ID)
+		fmt.Println("Status: ", vol.Status)
+		fmt.Println("Transport-type: ", vol.Transport)
+		fmt.Println("Number of Bricks: ", len(vol.Bricks))
+		fmt.Println("Bricks:")
+		for i,brick := range vol.Bricks{
+			fmt.Printf("Brick%d: %s:%s\n", i+1, brick.Hostname, brick.Path)
+		}
 	},
 }
 
