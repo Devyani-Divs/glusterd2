@@ -15,9 +15,16 @@ func (c *Client) VolumeCreate(req api.VolCreateReq) (api.Volinfo, error) {
 }
 
 // Volumes returns list of all volumes
-func (c *Client) Volumes() (api.VolList, error) {
-	var vols api.VolList
+func (c *Client) VolumeAll() ([]api.Volinfo, error) {
+	var vols []api.Volinfo
 	err := c.get("/v1/volumes", nil, http.StatusOK, &vols)
+	return vols, err
+}
+
+func (c *Client) Volumes(volname string) (api.Volinfo, error) {
+	var vols api.Volinfo
+	url := fmt.Sprintf("/v1/volumes/%s", volname)
+	err := c.get(url, nil, http.StatusOK, &vols)
 	return vols, err
 }
 

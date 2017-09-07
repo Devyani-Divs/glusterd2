@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	log "github.com/Sirupsen/logrus"
+	"github.com/gluster/glusterd2/pkg/api"
 )
 
 const (
@@ -16,6 +17,7 @@ const (
 	helpVolumeSetCmd    = "Set a Gluster Volume Option"
 	helpVolumeResetCmd  = "Reset a Gluster Volume Option"
 	helpVolumeInfoCmd   = "Get Gluster Volume Info"
+	helpVolumeListCmd   = "List all Gluster Volumes"
 	helpVolumeStatusCmd = "Get Gluster Volume Status"
 )
 
@@ -152,16 +154,44 @@ var volumeResetCmd = &cobra.Command{
 	},
 }
 
+func volumeInfoHandler2(cmd *cobra.Command)(api.Volinfo, error) {
+	var vols api.Volinfo
+	validateNArgs(cmd, 0, 1)
+	volname := ""
+	if len(cmd.Flags().Args()) > 0 {
+		volname = cmd.Flags().Args()[0]
+	}
+	if volname == ""{
+		vols_, err := client.VolumeAll()
+		if err != nil {
+			log.Println("No volumes present")
+			failure(fmt.Sprintf("Error getting Volumes list %s", err.Error()), 1)
+		}
+		fmt.Println(vols_)
+	}else{
+		vols, _ = client.Volumes(volname)
+	}
+	return vols, nil
+}
+
 var volumeInfoCmd = &cobra.Command{
 	Use:   "info",
 	Short: helpVolumeInfoCmd,
 	Run: func(cmd *cobra.Command, args []string) {
-		validateNArgs(cmd, 0, 1)
-		volname := "all"
-		if len(cmd.Flags().Args()) > 0 {
-			volname = cmd.Flags().Args()[0]
-		}
-		fmt.Println("INFO:", volname)
+		vols, err := volumeInfoHandler2(cmd)
+		fmt.Println(vols)
+		fmt.Println(err)
+		// for i, vol := range vols {
+		// 		fmt.Println("Volume Name: ", vol.Name)
+		// }
+	},
+}
+
+var volumeListCmd = &cobra.Command{
+	Use:   "list",
+	Short: helpVolumeListCmd,
+	Run: func(cmd *cobra.Command, args []string) {
+		volumeInfoHandler2(cmd)
 	},
 }
 
